@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #0a0a0a;
+            --primary-red: #E50914;
+            --text-main: #FFFFFF;
+            --text-muted: #b0b0b0;
+            --card-w: 280px;       /* lebih lebar dari sebelumnya, foto lebih besar */
+            --card-h: 158px;       /* 16:9 ~ 280/158 ≈ 1.77 */
+            --gap: 4px;            /* jarak antar kartu rapat ala Netflix */
+            --row-gap: 12px;       /* jarak antar baris */
+        }
+
+        html, body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            width: 100%;
+            height: 100%;
+            overflow: hidden;       /* mencegah scroll halaman utama, scroll terjadi di kontainer */
+        }
+
+        /* Wrapper utama: flex column dengan scrolling vertikal jika konten melebihi tinggi */
+        .galeri-section {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem 3rem 2rem 3rem;
+            gap: var(--row-gap);
+            overflow-y: auto;       /* SCROLL VERTIKAL dengan touchpad / mousewheel */
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Custom scrollbar biar keren */
+        .galeri-section::-webkit-scrollbar {
+            width: 6px;
+        }
+        .galeri-section::-webkit-scrollbar-track {
+            background: #1f1f1f;
+            border-radius: 10px;
+        }
+        .galeri-section::-webkit-scrollbar-thumb {
+            background: #E50914;
+            border-radius: 10px;
+        }
+
+        .galeri-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+            margin-bottom: 0px;
+            transition: color 0.2s;
+            border-left: 4px solid var(--primary-red);
+            padding-left: 14px;
+        }
+        .galeri-section:hover .galeri-title {
+            color: var(--text-main);
+        }
+
+        /* setiap baris punya wrapper relatif untuk tombol panah */
+        .row-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            width: 100%;
+            min-height: calc(var(--card-h) * 1.2);
+        }
+
+        /* efek fade kiri-kanan seperti netflix */
+        .row-wrapper::before,
+        .row-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 70px;
+            height: 100%;
+            z-index: 15;
+            pointer-events: none;
+        }
+        .row-wrapper::before {
+            left: 0;
+            background: linear-gradient(to right, var(--bg-color) 25%, transparent);
+        }
+        .row-wrapper::after {
+            right: 0;
+            background: linear-gradient(to left, var(--bg-color) 25%, transparent);
+        }
+
+        /* Track clip: overflow hidden, tapi ruang untuk hover scale */
+        .row-track-clip {
+            flex: 1;
+            overflow-x: auto;      /* SCROLL HORIZONTAL DENGAN TOUCHPAD / mousewheel + drag */
+            overflow-y: hidden;
+            scroll-behavior: smooth;
+            cursor: grab;
+            white-space: nowrap;
+            border-radius: 6px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-red) #2a2a2a;
+        }
+        .row-track-clip:active {
+            cursor: grabbing;
+        }
+        .row-track-clip::-webkit-scrollbar {
+            height: 4px;
+        }
+        .row-track-clip::-webkit-scrollbar-track {
+            background: #1e1e1e;
+            border-radius: 20px;
+        }
+        .row-track-clip::-webkit-scrollbar-thumb {
+            background: var(--primary-red);
+            border-radius: 20px;
+        }
+
+        /* track horizontal - flex row, tidak perlu transform js */
+        .row-track {
+            display: inline-flex;
+            gap: var(--gap);
+            padding: 8px 0 12px 0;   /* sedikit ruang vertikal untuk shadow hover */
+            align-items: center;
+        }
+
+        /* Kartu besar dan cinematic */
+        .grid-card {
+            flex: 0 0 var(--card-w);
+            width: var(--card-w);
+            height: var(--card-h);
+            border-radius: 6px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            background: #171717;
+            filter: grayscale(70%) brightness(0.7);
+            transition: filter 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), transform 0.25s ease, box-shadow 0.25s ease;
+            transform-origin: center center;
+            will-change: transform;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+
+        /* Efek hover Netflix: warna penuh + zoom + shadow tajam */
+        .grid-card:hover {
+            filter: grayscale(0%) brightness(1.05);
+            transform: scale(1.22);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.8);
+            z-index: 55;
+        }
+
+        .grid-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            pointer-events: none;
+        }
+
+        /* Gradien bawah ala kartu netflix */
+        .grid-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40%;
+            background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+            opacity: 0.8;
+            transition: opacity 0.25s;
+            pointer-events: none;
+        }
+        .grid-card:hover::after {
+            opacity: 0;
+        }
+
+        /* Efek redup pada kartu lain saat salah satu di-hover (cinematic) */
+        .row-track:has(.grid-card:hover) .grid-card:not(:hover) {
+            filter: grayscale(80%) brightness(0.45);
+            transition: filter 0.3s;
+        }
+
+        /* Tombol panah kiri/kanan (opsional) namun tetap ada untuk navigasi alternatif */
+        .row-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            color: white;
+            border: none;
+            width: 44px;
+            height: 70%;
+            font-size: 1.3rem;
+            cursor: pointer;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.25s, background 0.2s;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .row-wrapper:hover .row-btn {
+            opacity: 0.9;
+        }
+        .row-btn:hover {
+            background: var(--primary-red);
+            opacity: 1;
+        }
+        .btn-left {
+            left: 4px;
+        }
+        .btn-right {
+            right: 4px;
+        }
+
+        /* Efek sedikit potong di baris ketiga karena "page selanjutnya" — biar terlihat ada konten lanjutan */
+        .last-row-hint {
+            position: relative;
+        }
+        .last-row-hint .row-track-clip::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+            width: 80px;
+            background: linear-gradient(90deg, transparent, var(--bg-color) 90%);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* Info tambahan kecil: indikasi scroll lebih banyak */
+        .scroll-hint {
+            text-align: right;
+            font-size: 0.7rem;
+            color: #6c6c6c;
+            margin-top: -8px;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 6px;
+        }
+        .scroll-hint i {
+            font-size: 0.7rem;
+            color: #E50914;
+        }
+
+        /* responsive: ukuran kartu mengecil sedikit di layar sempit agar tetap muat */
+        @media (max-width: 900px) {
+            :root {
+                --card-w: 240px;
+                --card-h: 135px;
+            }
+            .galeri-section {
+                padding: 1rem 1.5rem 1.5rem 1.5rem;
+            }
+            .row-btn {
+                width: 32px;
+            }
+        }
+        @media (max-width: 680px) {
+            :root {
+                --card-w: 200px;
+                --card-h: 113px;
+            }
+        }
+
+        /* Baris keempat (halaman berikutnya) disembunyikan sedikit dengan efek potongan visual - tetapi tetap ada dan bisa discroll */
+        .extra-page-section {
+            margin-top: 4px;
+            border-top: 1px solid rgba(229, 9, 20, 0.3);
+            padding-top: 12px;
+            position: relative;
+        }
+        .extra-page-section .galeri-title {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .extra-page-section .galeri-title i {
+            font-size: 0.9rem;
+            margin-left: 8px;
+            color: var(--primary-red);
+        }
+
+        /* Baris keempat juga agak 'terpotong' sedikit secara visual karena padding atas dan efek fade, namun full */
+    </style>
+</head>
+<body>
+
+<section class="galeri-section">
+    <h2 class="galeri-title">✨ Galeri Kenangan • Volume 1</h2>
+    <div class="scroll-hint"><i class="fa-solid fa-arrow-left"></i> Geser kiri/kanan dengan touchpad atau mouse <i class="fa-solid fa-arrow-right"></i> &nbsp; | &nbsp; <i class="fa-solid fa-arrow-down"></i> Scroll ke bawah untuk 20 foto lainnya</div>
+
+    <!-- BARIS 1 (foto 1-10) -->
+    <div class="row-wrapper">
+        <button class="row-btn btn-left" onclick="scrollHorizontal('row1', -1)"><i class="fas fa-chevron-left"></i></button>
+        <div class="row-track-clip" id="clip1" data-row="row1">
+            <div class="row-track" id="row1">
+                <!-- 10 foto pertama: tin1.jpg - tin10.jpg -->
+                <div class="grid-card"><img src="images/tin1.jpg" alt="kenangan 1" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin2.jpg" alt="kenangan 2" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin3.jpg" alt="kenangan 3" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin4.jpg" alt="kenangan 4" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin5.jpg" alt="kenangan 5" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin6.jpg" alt="kenangan 6" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin7.jpg" alt="kenangan 7" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin8.jpg" alt="kenangan 8" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin9.jpg" alt="kenangan 9" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin10.jpg" alt="kenangan 10" loading="lazy"></div>
+            </div>
+        </div>
+        <button class="row-btn btn-right" onclick="scrollHorizontal('row1', 1)"><i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <!-- BARIS 2 (foto 11-20) -->
+    <div class="row-wrapper">
+        <button class="row-btn btn-left" onclick="scrollHorizontal('row2', -1)"><i class="fas fa-chevron-left"></i></button>
+        <div class="row-track-clip" id="clip2" data-row="row2">
+            <div class="row-track" id="row2">
+                <div class="grid-card"><img src="images/tin11.jpg" alt="kenangan 11" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin12.jpg" alt="kenangan 12" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin13.jpg" alt="kenangan 13" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin14.jpg" alt="kenangan 14" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin15.jpg" alt="kenangan 15" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin16.jpg" alt="kenangan 16" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin17.jpg" alt="kenangan 17" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin18.jpg" alt="kenangan 18" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin19.jpg" alt="kenangan 19" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin20.jpg" alt="kenangan 20" loading="lazy"></div>
+            </div>
+        </div>
+        <button class="row-btn btn-right" onclick="scrollHorizontal('row2', 1)"><i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <!-- BARIS 3 (foto 21-30) AGAR TERPOTONG SEDIKIT (efek visual "masih ada konten berikutnya") -->
+    <div class="row-wrapper last-row-hint">
+        <button class="row-btn btn-left" onclick="scrollHorizontal('row3', -1)"><i class="fas fa-chevron-left"></i></button>
+        <div class="row-track-clip" id="clip3" data-row="row3">
+            <div class="row-track" id="row3">
+                <div class="grid-card"><img src="images/tin21.jpg" alt="kenangan 21" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin22.jpg" alt="kenangan 22" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin23.jpg" alt="kenangan 23" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin24.jpg" alt="kenangan 24" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin25.jpg" alt="kenangan 25" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin26.jpg" alt="kenangan 26" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin27.jpg" alt="kenangan 27" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin28.jpg" alt="kenangan 28" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin29.jpg" alt="kenangan 29" loading="lazy"></div>
+                <div class="grid-card"><img src="images/tin30.jpg" alt="kenangan 30" loading="lazy"></div>
+            </div>
+        </div>
+        <button class="row-btn btn-right" onclick="scrollHorizontal('row3', 1)"><i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <!-- =============================================== -->
+    <!-- HALAMAN SELANJUTNYA: 20 FOTO (tin31.jpg sampai tin50.jpg) -->
+    <!-- Disusun dalam satu baris tambahan tapi terlihat seperti page berikutnya namun masih menyatu -->
+    <!-- Ditambah efek "agak kepotong sedikit" di bagian atas karena scroll, dan diberi judul volume 2 -->
+    <!-- =============================================== -->
+    <div class="extra-page-section">
+        <h2 class="galeri-title">🎞️ Volume 2 • Kenangan Berikutnya <i class="fa-regular fa-images"></i></h2>
+        <div class="row-wrapper">
+            <button class="row-btn btn-left" onclick="scrollHorizontal('row4', -1)"><i class="fas fa-chevron-left"></i></button>
+            <div class="row-track-clip" id="clip4" data-row="row4">
+                <div class="row-track" id="row4">
+                    <!-- 20 foto dari tin31.jpg sampai tin50.jpg -->
+                    <div class="grid-card"><img src="images/tin31.jpg" alt="kenangan 31" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin32.jpg" alt="kenangan 32" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin33.jpg" alt="kenangan 33" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin34.jpg" alt="kenangan 34" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin35.jpg" alt="kenangan 35" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin36.jpg" alt="kenangan 36" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin37.jpg" alt="kenangan 37" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin38.jpg" alt="kenangan 38" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin39.jpg" alt="kenangan 39" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin40.jpg" alt="kenangan 40" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin41.jpg" alt="kenangan 41" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin42.jpg" alt="kenangan 42" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin43.jpg" alt="kenangan 43" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin44.jpg" alt="kenangan 44" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin45.jpg" alt="kenangan 45" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin46.jpg" alt="kenangan 46" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin47.jpg" alt="kenangan 47" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin48.jpg" alt="kenangan 48" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin49.jpg" alt="kenangan 49" loading="lazy"></div>
+                    <div class="grid-card"><img src="images/tin50.jpg" alt="kenangan 50" loading="lazy"></div>
+                </div>
+            </div>
+            <button class="row-btn btn-right" onclick="scrollHorizontal('row4', 1)"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div class="scroll-hint"><i class="fa-regular fa-hand-peace"></i> 50 kenangan indah — scroll terus untuk lebih banyak</div>
+    </div>
+</section>
+
+<script>
+    // Fungsi scroll horizontal dengan tombol panah (memanfaatkan scrollLeft dari container .row-track-clip)
+    function scrollHorizontal(rowId, direction) {
+        // cari track-clip yang menjadi parent dari row-track
+        let trackClip = null;
+        if (rowId === 'row1') trackClip = document.getElementById('clip1');
+        else if (rowId === 'row2') trackClip = document.getElementById('clip2');
+        else if (rowId === 'row3') trackClip = document.getElementById('clip3');
+        else if (rowId === 'row4') trackClip = document.getElementById('clip4');
+        else return;
+        
+        if (!trackClip) return;
+        
+        // ambil kartu pertama untuk menghitung lebar scroll (card width + gap)
+        const trackElem = document.getElementById(rowId);
+        if (!trackElem) return;
+        const firstCard = trackElem.querySelector('.grid-card');
+        if (!firstCard) return;
+        
+        const cardWidth = firstCard.offsetWidth;
+        const gapValue = 4; // sesuai var(--gap) = 4px
+        const scrollAmount = (cardWidth + gapValue) * 3.5; // geser sekitar 3.5 kartu agar smooth
+        
+        let currentScroll = trackClip.scrollLeft;
+        let newScroll = direction === 1 ? currentScroll + scrollAmount : currentScroll - scrollAmount;
+        
+        // max scroll
+        const maxScroll = trackClip.scrollWidth - trackClip.clientWidth;
+        newScroll = Math.max(0, Math.min(newScroll, maxScroll));
+        
+        trackClip.scrollTo({
+            left: newScroll,
+            behavior: 'smooth'
+        });
+    }
+    
+    // ========== FITUR SCROLL DENGAN TOUCHPAD & MOUSEWHEEL OTOMATIS (horizontal) ==========
+    // Setiap .row-track-clip bisa discroll secara horizontal native, dan kita tambahkan event wheel
+    // untuk mengubah scroll horizontal jika pengguna menggeser secara vertikal sambil shift? Tidak perlu: 
+    // Namun agar lebih intuitif dengan touchpad (geser dua jari horizontal) sudah native. 
+    // Kita juga bisa menambahkan dukungan agar saat mouse wheel di atas area row, scroll horizontal terjadi (opsional)
+    // seperti Netflix. Tapi karena sudah overflow:auto, touchpad horizontal works out-of-box.
+    // Tambahan: supaya scroll vertikal halaman tetap lancar, kita biarkan default. 
+    // Namun agar pengguna bisa geser cepat, kita akan menambahkan sedikit sentuhan: ketika mouse wheel di dalam track-clip
+    // tanpa shift, kita bisa menggeser horizontal dengan wheel biasa (optional).
+    // Ini memberikan pengalaman premium seperti Netflix di laptop.
+    
+    function initHorizontalWheelSupport() {
+        const clips = document.querySelectorAll('.row-track-clip');
+        clips.forEach(clip => {
+            clip.addEventListener('wheel', function(e) {
+                // Jika pengguna melakukan scroll vertikal murni (deltaY tidak nol) dan tidak ada shiftKey,
+                // kita bisa mengubahnya menjadi scroll horizontal agar lebih nyaman di touchpad (mirip Netflix).
+                // Tapi agar tidak mengganggu, kita hanya aktifkan jika deltaX kecil dan kita konversi deltaY ke scroll horizontal.
+                // Banyak website carousel: jika di area carousel, wheel memicu horizontal.
+                // Ini memudahkan touchpad laptop (geser 2 jari vertikal => horizontal)
+                const delta = e.deltaY;
+                if (Math.abs(delta) > 0) {
+                    // cegah event bubbling kalau perlu tapi tetap pertahankan vertical scroll halaman jika sudah mentok
+                    const canScrollLeft = clip.scrollLeft > 0;
+                    const canScrollRight = clip.scrollLeft < (clip.scrollWidth - clip.clientWidth);
+                    if ((delta < 0 && canScrollLeft) || (delta > 0 && canScrollRight)) {
+                        e.preventDefault();
+                        clip.scrollLeft += delta;
+                    } else {
+                        // jika sudah mentok, biarkan event vertical scroll halaman terjadi (tidak dicegah)
+                        // ini membuat user tetap bisa scroll ke bawah untuk melihat "page selanjutnya"
+                        return;
+                    }
+                }
+                // jika deltaX horizontal, biarkan default
+            }, { passive: false });
+        });
+    }
+    
+    // Opsional: untuk touchpad gesture native, browser sudah support horizontal scroll dengan overflow auto.
+    // Namun untuk menambah efek smoothness, kita juga bisa sinkronkan tombol panah dengan snap.
+    // Juga tambahkan interaksi agar hover scale tidak terpotong oleh overflow hidden? sudah aman karena track-clip punya padding bottom & overflow visible y?
+    // sedikit perbaikan: row-track-clip overflow-x auto dan overflow-y visible, sehingga shadow hover tidak terpotong.
+    // Style tambahan untuk memastikan shadow hover tidak terpotong:
+    const styleFix = document.createElement('style');
+    styleFix.textContent = `
+        .row-track-clip {
+            overflow-y: visible;
+        }
+        .row-track {
+            padding-bottom: 18px;
+        }
+        .galeri-section {
+            padding-bottom: 40px;
+        }
+        /* baris ke-3 agak terpotong sedikit secara visual (tambahan gradient bawah) */
+        .last-row-hint .row-track-clip {
+            mask-image: linear-gradient(to bottom, black 85%, transparent 98%);
+            -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 98%);
+        }
+        /* efek "page selanjutnya" pada extra section terlihat menyatu namun ada pemisah halus */
+        .extra-page-section {
+            margin-bottom: 20px;
+        }
+    `;
+    document.head.appendChild(styleFix);
+    
+    // aktifkan support wheel horizontal
+    initHorizontalWheelSupport();
+    
+    // Optional: saat load, pastikan semua baris bisa discroll tanpa masalah dan tidak ada konflik
+    window.addEventListener('load', () => {
+        // menyesuaikan posisi scroll jika ada parameter
+        console.log('Galeri 50 foto siap — scroll horizontal native & tombol panah, 4 baris, volume 2 di halaman bawah');
+        // tambahan: efek "kepotong sedikit" pada baris 3 karena mask gradient dan juga kita beri sedikit transisi
+        // untuk mempertegas bahwa ada konten di bawahnya.
+        const row3Clip = document.getElementById('clip3');
+        if(row3Clip) {
+            // tidak melakukan perubahan besar, hanya memastikan user sadar ada foto berikutnya di bawah.
+        }
+    });
+    
+    // tambahan untuk support klik gambar (optional interaksi)
+    const allCards = document.querySelectorAll('.grid-card');
+    allCards.forEach((card, idx) => {
+        card.addEventListener('click', () => {
+            const imgSrc = card.querySelector('img')?.getAttribute('src');
+            if(imgSrc) {
+                // bisa dibuat modal nanti, tetapi tidak wajib, cukup console atau alert ringan
+                console.log(`Membuka kenangan: ${imgSrc}`);
+                // efek feedback: sedikit kilap
+                card.style.transform = 'scale(1.23)';
+                setTimeout(() => { card.style.transform = ''; }, 150);
+            }
+        });
+    });
+</script>
+</body>
+</html>

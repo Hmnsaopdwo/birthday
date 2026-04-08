@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CANTIKAFLIX - Happy Birthday!</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <!-- Password Gate (Lock Screen) -->
+    <div id="password-gate">
+        <div class="lock-container">
+            <h1 class="logo">NETFLIX</h1>
+            <form id="lock-form">
+                <input type="text" id="pin-input" placeholder="Masukkan kode rahasia" pattern="\d*" maxlength="6" autocomplete="off" required>
+                <button type="submit" class="btn btn-unlock">Unlock</button>
+            </form>
+            <p id="hint-toggle">Lupa kode? Klik untuk hint</p>
+            <div id="hint-popup" class="hidden">🔐 Hint: Tanggal spesial? (6 digit)</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content" class="hidden">
+        <!-- Navbar -->
+        <header id="navbar">
+            <div class="nav-left">
+                <div class="logo">NETFLIX</div>
+                <nav class="nav-links">
+                    <a href="#hero">Beranda</a>
+                    <a href="#trending">Kenangan</a>
+                    <a href="#features">Fitur Spesial</a>
+                    <a href="#wishes">Pesan Digital</a>
+                </nav>
+            </div>
+            <div class="nav-right">
+                <button id="music-toggle" class="nav-btn"><i class="fas fa-volume-mute"></i></button>
+            </div>
+        </header>
+
+        <main>
+            <!-- Hero Section -->
+            <section id="hero" class="hero-container reveal active">
+                <!-- Parallax Background Image -->
+                <div class="hero-bg" id="hero-parallax-bg" style="background-image: url('https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=1920&ixlib=rb-4.0.3');"></div>
+                <div class="hero-vignette-bottom"></div>
+                <div class="hero-vignette-left"></div>
+                
+                <div class="hero-content">
+                    <div class="n-series">
+                        <span class="n-logo">N</span> <span class="series-text">S E R I E S</span>
+                    </div>
+                    <!-- Main Movie Title -->
+                    <h1 class="movie-title">ASTIN'S<br>20TH</h1>
+                    <div class="top-10">
+                        <div class="top-10-badge">TOP<br>10</div>
+                        <span>#1 di Indonesia</span>
+                    </div>
+                    <p class="hero-desc">Satu tahun bertambah, satu juta memori baru siap diciptakan. Selamat ulang tahun, Astin!</p>
+                    <div class="hero-buttons">
+                        <button class="btn btn-play" id="open-envelope-btn">
+                            <i class="fas fa-play"></i> Putar Pesan
+                        </button>
+                        <button class="btn btn-more" onclick="document.getElementById('trending').scrollIntoView({behavior: 'smooth'})">
+                            <i class="fas fa-info-circle"></i> Info Selengkapnya
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Message Modal -->
+            <div id="message-modal" class="modal hidden">
+                <div class="modal-content netflix-modal">
+                    <span class="close-btn">&times;</span>
+                    <div class="modal-video-placeholder">
+                        <i class="fas fa-play-circle play-icon-large"></i>
+                    </div>
+                    <div class="modal-details">
+                        <h2 class="modal-title">Pesan Rahasia 💌</h2>
+                        <div class="modal-meta">
+                            <span class="match">99% Match</span>
+                            <span class="year">2026</span>
+                            <span class="age">13+</span>
+                            <span class="duration">1 Season</span>
+                            <span class="hd">HD</span>
+                        </div>
+                        <p class="modal-text">"Semoga di umur yang baru ini kamu selalu dikelilingi kebahagiaan, layaknya seorang bintang di film. Teruslah bersinar, Astin!"<br><br><span class="cast">Pemeran: Tristan</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Moving Fish Element -->
+            <div class="swimming-fish-container">
+                <div class="fish-element" id="scroll-fish">🐠</div>
+            </div>
+
+            <!-- Trending Row (Memories) -->
+            <section id="trending" class="row-container reveal">
+                <h2 class="row-title">Trending Sekarang</h2>
+                <div class="slider-wrapper">
+                    <button class="slider-arrow left-arrow"><i class="fas fa-chevron-left"></i></button>
+                    <div class="slider" id="memory-slider">
+                        <div class="card"><img src="https://images.unsplash.com/photo-1516222338250-863216ce01ea?w=500&auto=format&fit=crop&q=60" alt="Memory 1"></div>
+                        <div class="card"><img src="https://images.unsplash.com/photo-1530103862676-de889ba24982?w=500&auto=format&fit=crop&q=60" alt="Memory 2"></div>
+                        <div class="card"><img src="https://images.unsplash.com/photo-1520854221256-17451cc331bf?w=500&auto=format&fit=crop&q=60" alt="Memory 3"></div>
+                        <div class="card"><img src="https://images.unsplash.com/photo-1519741497674-611481863552?w=500&auto=format&fit=crop&q=60" alt="Memory 4"></div>
+                        <div class="card"><img src="https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=500&auto=format&fit=crop&q=60" alt="Memory 5"></div>
+                        <div class="card"><img src="https://images.unsplash.com/photo-1511895426328-dc8714191300?w=500&auto=format&fit=crop&q=60" alt="Memory 6"></div>
+                        <div class="card"><img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=60" alt="Memory 7"></div>
+                    </div>
+                    <button class="slider-arrow right-arrow"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </section>
+
+            <!-- Special Features Row (3D Crown) -->
+            <section id="features" class="row-container reveal">
+                <h2 class="row-title">Fitur Spesial: Mahkota 3D 👑</h2>
+                <div class="special-feature-wrapper">
+                    <div class="feature-info">
+                        <h3>Your Magical Crown</h3>
+                        <p>Sentuh atau geser mahkota 3D ini. Sebuah penghargaan untuk bintang utama hari ini!</p>
+                    </div>
+                    <div id="three-container" class="feature-interactive"></div>
+                </div>
+            </section>
+
+            <!-- Playlist Generator Row -->
+            <section id="playlist" class="row-container playlist-section reveal">
+                <h2 class="row-title">DJ CANTIKAFLIX 🎧</h2>
+                <p class="playlist-desc">Pilih mood kamu hari ini untuk mendapatkan rekomendasi soundtrack terbaik:</p>
+                <div class="mood-buttons">
+                    <button class="mood-btn" data-mood="happy">Happy 😊</button>
+                    <button class="mood-btn" data-mood="chill">Chill 🌸</button>
+                    <button class="mood-btn" data-mood="energetic">Energetic 💃</button>
+                </div>
+                <div id="playlist-result" class="playlist-result hidden">
+                    <h3 id="playlist-title"></h3>
+                    <ul id="playlist-list"></ul>
+                </div>
+            </section>
+
+            <!-- Birthday Wishes Canvas -->
+            <section id="wishes" class="row-container wishes-section reveal">
+                <h2 class="row-title">Papan Ucapan 📝</h2>
+                <div class="wishes-wrapper">
+                    <div class="wish-form-container">
+                        <h3>Tinggalkan Pesan</h3>
+                        <form id="wish-form">
+                            <input type="text" id="wish-name" placeholder="Nama Kamu" required>
+                            <textarea id="wish-text" placeholder="Tulis ucapan selamat ulang tahun..." required></textarea>
+                            <button type="submit" class="btn btn-play">Kirim Pesan</button>
+                        </form>
+                    </div>
+                    <div id="wish-footer" class="wish-board">
+                        <!-- Stickers will be spawned here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>CANTIKAFLIX © 2026 - Template for Astin's Birthday</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
