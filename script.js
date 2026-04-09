@@ -436,91 +436,110 @@ if (openBtn && modal && closeBtn) {
         }
     });
 }
-// --- PLAYLIST GENERATOR ---
-const playlists = {
-    happy:     { title: "🎉 Happy Birthday Playlist", songs: ["Happy Birthday - Traditional","Dance The Night - Dua Lipa","Happy - Pharrell Williams","Uptown Funk - Bruno Mars","Can't Stop the Feeling - Justin Timberlake"] },
-    chill:     { title: "🌸 Chill Birthday Vibes",    songs: ["Happy Birthday (Acoustic Version)","Snooze - SZA","Golden Hour - JVKE","Perfect - Ed Sheeran","Lover - Taylor Swift"] },
-    energetic: { title: "⚡ Party Mode Activated",    songs: ["Happy Birthday (Remix)","Speed Drive - Charli XCX","Blinding Lights - The Weeknd","Levitating - Dua Lipa","Don't Start Now - Dua Lipa"] }
+
+// --- BIRTHDAY WISH CANVAS (Firebase Realtime) ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyAjydD48629p8p8eVdb_tcweF0ssCsW9tOo",
+    authDomain: "birthday-778e4.firebaseapp.com",
+    projectId: "birthday-778e4",
+    storageBucket: "birthday-778e4.firebasestorage.app",
+    messagingSenderId: "515329548701",
+    appId: "1:515329548701:web:29008fa617f836a32c8f74"
 };
 
-document.querySelectorAll('.mood-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const data = playlists[btn.getAttribute('data-mood')];
-        document.getElementById('playlist-title').textContent = data.title;
-        const list = document.getElementById('playlist-list');
-        list.innerHTML = '';
-        data.songs.forEach((song, i) => {
-            const li = document.createElement('li');
-            li.textContent = song;
-            li.style.animation = `fadeIn 0.3s ease ${i * 0.1}s both`;
-            list.appendChild(li);
-        });
-        document.getElementById('playlist-result').classList.remove('hidden');
-    });
-});
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-// --- BIRTHDAY WISH CANVAS ---
 const wishForm = document.getElementById('wish-form');
 const wishFooter = document.getElementById('wish-footer');
+const renderedIds = new Set(); // hindari duplikat
 
-if (wishForm && wishFooter) {
-    wishForm.addEventListener('submit', (e) => {
+// Kirim ucapan ke Firestore
+if (wishForm) {
+    wishForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const name = document.getElementById('wish-name').value;
-        const text = document.getElementById('wish-text').value;
-        if (name && text) { createSticker(name, text); wishForm.reset(); }
+        const name = document.getElementById('wish-name').value.trim();
+        const text = document.getElementById('wish-text').value.trim();
+        if (!name || !text) return;
+
+        try {
+            await addDoc(collection(db, 'wishes'), {
+                name,
+                text,
+                createdAt: serverTimestamp()
+            });
+            wishForm.reset();
+        } catch (err) {
+            console.error('Gagal kirim:', err);
+        }
+    });
+}
+
+// Dengarkan perubahan realtime dari Firestore
+if (wishFooter) {
+    const q = query(collection(db, 'wishes'), orderBy('createdAt', 'asc'));
+
+    onSnapshot(q, (snapshot) => {
+        snapshot.docChanges().forEach(change => {
+            if (change.type === 'added') {
+                const doc = change.doc;
+                if (renderedIds.has(doc.id)) return;
+                renderedIds.add(doc.id);
+                const { name, text } = doc.data();
+                createSticker(name, text);
+            }
+        });
+    });
+}
+
+function createSticker(name, text) {
+    const sticker = document.createElement('div');
+    sticker.classList.add('sticker');
+    const maxW = Math.max(10, wishFooter.clientWidth - 260);
+    const maxH = Math.max(10, wishFooter.clientHeight - 120);
+    sticker.style.left = `${Math.min(maxW - 20, Math.max(10, Math.random() * maxW))}px`;
+    sticker.style.top  = `${Math.min(maxH - 20, Math.max(10, Math.random() * maxH))}px`;
+    sticker.style.transform = `rotate(${(Math.random() - 0.5) * 20}deg)`;
+    sticker.innerHTML = `<div class="sticker-name">${name}</div><div class="sticker-text">${text}</div>`;
+
+    let dragging = false, offset = { x: 0, y: 0 };
+    sticker.addEventListener('mousedown', (e) => {
+        dragging = true;
+        offset = { x: sticker.offsetLeft - e.clientX, y: sticker.offsetTop - e.clientY };
+        sticker.style.zIndex = '1000'; sticker.style.cursor = 'grabbing'; e.preventDefault();
+    });
+    document.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        const maxX = wishFooter.clientWidth - sticker.offsetWidth;
+        const maxY = wishFooter.clientHeight - sticker.offsetHeight;
+        sticker.style.left = Math.min(maxX, Math.max(0, e.clientX + offset.x)) + 'px';
+        sticker.style.top  = Math.min(maxY, Math.max(0, e.clientY + offset.y)) + 'px';
+    });
+    document.addEventListener('mouseup', () => {
+        if (dragging) { dragging = false; sticker.style.zIndex = ''; sticker.style.cursor = 'grab'; }
     });
 
-    function createSticker(name, text) {
-        const sticker = document.createElement('div');
-        sticker.classList.add('sticker');
-        const maxW = Math.max(10, wishFooter.clientWidth - 260);
-        const maxH = Math.max(10, wishFooter.clientHeight - 120);
-        sticker.style.left = `${Math.min(maxW - 20, Math.max(10, Math.random() * maxW))}px`;
-        sticker.style.top  = `${Math.min(maxH - 20, Math.max(10, Math.random() * maxH))}px`;
-        sticker.style.transform = `rotate(${(Math.random() - 0.5) * 20}deg)`;
-        sticker.innerHTML = `<div class="sticker-name">${name}</div><div class="sticker-text">${text}</div>`;
-        
-        let dragging = false, offset = { x: 0, y: 0 };
-        sticker.addEventListener('mousedown', (e) => {
-            dragging = true;
-            offset = { x: sticker.offsetLeft - e.clientX, y: sticker.offsetTop - e.clientY };
-            sticker.style.zIndex = '1000'; sticker.style.cursor = 'grabbing'; e.preventDefault();
-        });
-        document.addEventListener('mousemove', (e) => {
-            if (!dragging) return;
-            const maxX = wishFooter.clientWidth - sticker.offsetWidth;
-            const maxY = wishFooter.clientHeight - sticker.offsetHeight;
-            sticker.style.left = Math.min(maxX, Math.max(0, e.clientX + offset.x)) + 'px';
-            sticker.style.top  = Math.min(maxY, Math.max(0, e.clientY + offset.y)) + 'px';
-        });
-        document.addEventListener('mouseup', () => { if (dragging) { dragging = false; sticker.style.zIndex = ''; sticker.style.cursor = 'grab'; } });
-        
-        sticker.addEventListener('touchstart', (e) => {
-            dragging = true;
-            const t = e.touches[0];
-            offset = { x: sticker.offsetLeft - t.clientX, y: sticker.offsetTop - t.clientY };
-            sticker.style.zIndex = '1000'; e.preventDefault();
-        }, { passive: false });
-        document.addEventListener('touchmove', (e) => {
-            if (!dragging) return; e.preventDefault();
-            const t = e.touches[0];
-            const maxX = wishFooter.clientWidth - sticker.offsetWidth;
-            const maxY = wishFooter.clientHeight - sticker.offsetHeight;
-            sticker.style.left = Math.min(maxX, Math.max(0, t.clientX + offset.x)) + 'px';
-            sticker.style.top  = Math.min(maxY, Math.max(0, t.clientY + offset.y)) + 'px';
-        }, { passive: false });
-        document.addEventListener('touchend', () => { dragging = false; sticker.style.zIndex = ''; });
-        
-        wishFooter.appendChild(sticker);
-    }
+    sticker.addEventListener('touchstart', (e) => {
+        dragging = true;
+        const t = e.touches[0];
+        offset = { x: sticker.offsetLeft - t.clientX, y: sticker.offsetTop - t.clientY };
+        sticker.style.zIndex = '1000'; e.preventDefault();
+    }, { passive: false });
+    document.addEventListener('touchmove', (e) => {
+        if (!dragging) return; e.preventDefault();
+        const t = e.touches[0];
+        const maxX = wishFooter.clientWidth - sticker.offsetWidth;
+        const maxY = wishFooter.clientHeight - sticker.offsetHeight;
+        sticker.style.left = Math.min(maxX, Math.max(0, t.clientX + offset.x)) + 'px';
+        sticker.style.top  = Math.min(maxY, Math.max(0, t.clientY + offset.y)) + 'px';
+    }, { passive: false });
+    document.addEventListener('touchend', () => { dragging = false; sticker.style.zIndex = ''; });
 
-    setTimeout(() => {
-        createSticker("Tristan", "Selamat ulang tahun Astin! Semoga tahun ini sekeren film blockbuster favoritmu! 🎬");
-        setTimeout(() => createSticker("Netflix", "Recommended for you: Happy Birthday Astin! 🎂"), 500);
-    }, 1500);
+    wishFooter.appendChild(sticker);
 }
 
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -533,7 +552,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 
 window.addEventListener('beforeunload', () => { if (audioContext) audioContext.close(); });
 
-console.log('✅ CANTIKAFLIX JavaScript loaded successfully!');
+console.log('✅ NDUTFLIX JavaScript loaded successfully!');
 
 // ========== GALERI KENANGAN ==========
 function scrollHorizontal(rowId, direction) {
@@ -562,6 +581,74 @@ function initGalleryWheel() {
     });
 }
 
+// ========== VIDEO CARD CONVERTER ==========
+function convertVideoCards() {
+    // Untuk memory slider
+    const memorySlider = document.getElementById('memory-slider');
+    if (memorySlider) {
+        const cards = memorySlider.querySelectorAll('.card');
+        cards.forEach(card => convertCardMedia(card));
+    }
+    
+    // Jika ada galeri lain yang butuh konversi
+    const allCards = document.querySelectorAll('.grid-card');
+    allCards.forEach(card => convertCardMedia(card));
+}
+
+function convertCardMedia(card) {
+    const mediaElement = card.querySelector('img');
+    if (!mediaElement) return;
+    
+    const src = mediaElement.getAttribute('src');
+    if (!src) return;
+    
+    // Cek apakah file video
+    if (src.endsWith('.mp4') || src.endsWith('.webm') || src.endsWith('.mov')) {
+        // Buat elemen video
+        const video = document.createElement('video');
+        video.src = src;
+        video.autoplay = true;
+        video.loop = true;
+        video.muted = true;
+        video.playsInline = true;
+        video.setAttribute('playsinline', '');
+        
+        // Copy atribut penting
+        if (mediaElement.alt) {
+            video.alt = mediaElement.alt;
+        }
+        if (mediaElement.className) {
+            video.className = mediaElement.className;
+        }
+        
+        // Tambahkan poster fallback (opsional)
+        const posterSrc = src.replace(/\.(mp4|webm|mov)$/, '.jpg');
+        video.poster = posterSrc;
+        
+        // Ganti img dengan video
+        mediaElement.replaceWith(video);
+        
+        // Handle error
+        video.onerror = () => {
+            console.warn(`Video gagal dimuat: ${src}`);
+            // Fallback ke placeholder
+            const img = document.createElement('img');
+            img.src = posterSrc;
+            img.alt = video.alt || 'Video tidak tersedia';
+            video.replaceWith(img);
+        };
+    }
+}
+
+// Panggil saat halaman load
+document.addEventListener('DOMContentLoaded', () => {
+    convertVideoCards();
+    console.log('✅ Video converter initialized');
+});
+
+// Juga panggil jika ada konten dinamis yang dimuat
+window.convertVideoCards = convertVideoCards;
+
 // Jalankan setelah DOM siap
 if (document.querySelector('.galeri-section')) {
     initGalleryWheel();
@@ -570,5 +657,135 @@ if (document.querySelector('.galeri-section')) {
             card.style.transform = 'scale(1.23)';
             setTimeout(() => card.style.transform = '', 150);
         });
+    });
+}
+
+// --- ✨ NEW: PHOTO FILTER FEATURE (pengganti playlist) ✨ ---
+const filterBtns = document.querySelectorAll('.filter-btn');
+const previewImg = document.getElementById('previewImage');
+const filterEffectDesc = document.getElementById('filterEffectDesc');
+let currentFilter = 'original';
+let currentImageSrc = 'images/tin14.jpg';
+
+function applyFilter(filterType) {
+    if (!previewImg) return;
+    switch(filterType) {
+        case 'vintage':
+            previewImg.style.filter = 'sepia(0.6) contrast(1.1) brightness(0.95) saturate(1.2)';
+            if (filterEffectDesc) filterEffectDesc.innerHTML = '📻 Vintage retro - nuansa klasik yang hangat';
+            break;
+        case 'warm':
+            previewImg.style.filter = 'brightness(1.05) contrast(1.1) sepia(0.2) saturate(1.3) hue-rotate(-10deg)';
+            if (filterEffectDesc) filterEffectDesc.innerHTML = '🔥 Warm glow - seperti cahaya matahari sore';
+            break;
+        case 'cool':
+            previewImg.style.filter = 'brightness(0.98) contrast(1.05) saturate(1.1) hue-rotate(10deg)';
+            if (filterEffectDesc) filterEffectDesc.innerHTML = '❄️ Cool breeze - nuansa segar dan modern';
+            break;
+        case 'dramatic':
+            previewImg.style.filter = 'contrast(1.4) brightness(0.9) saturate(1.5) grayscale(0.2)';
+            if (filterEffectDesc) filterEffectDesc.innerHTML = '🎬 Dramatic cinematic - gaya film blockbuster';
+            break;
+        default:
+            previewImg.style.filter = 'none';
+            if (filterEffectDesc) filterEffectDesc.innerHTML = '🌈 Original - kenangan polos apa adanya ✨';
+    }
+}
+
+if (filterBtns.length) {
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = btn.getAttribute('data-filter');
+            applyFilter(currentFilter);
+        });
+    });
+}
+
+const downloadBtn = document.getElementById('downloadFilterBtn');
+if (downloadBtn) {
+    downloadBtn.addEventListener('click', () => {
+        const img = previewImg;
+        if (!img || !img.complete) return;
+        
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = img.naturalWidth || 800;
+        canvas.height = img.naturalHeight || 450;
+        
+        ctx.filter = window.getComputedStyle(img).filter;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        const link = document.createElement('a');
+        link.download = `kenangan_${currentFilter}_astin.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    });
+}
+
+function bindGalleryToFilter() {
+    const allGalleryImages = document.querySelectorAll('.grid-card img, .card img');
+    allGalleryImages.forEach(img => {
+        img.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (previewImg && img.src) {
+                previewImg.src = img.src;
+                currentImageSrc = img.src;
+                applyFilter(currentFilter);
+            }
+        });
+    });
+}
+
+setTimeout(bindGalleryToFilter, 800);
+
+// --- FILTER SWATCHES ---
+function initFilterSwatches() {
+    const swatches = document.querySelectorAll('.filter-swatch');
+    if (!swatches.length) return;
+
+    swatches.forEach(swatch => {
+        swatch.addEventListener('click', () => {
+            swatches.forEach(s => s.classList.remove('active'));
+            swatch.classList.add('active');
+            const src = swatch.getAttribute('data-src');
+            if (previewImg && src) {
+                previewImg.src = src;
+                currentImageSrc = src;
+                applyFilter(currentFilter);
+            }
+        });
+    });
+}
+setTimeout(initFilterSwatches, 900);
+
+// --- HAMBURGER MENU ---
+const hamburgerBtn = document.getElementById('hamburger');
+const mobileMenu = document.getElementById('mobile-menu');
+
+if (hamburgerBtn && mobileMenu) {
+    hamburgerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = !mobileMenu.classList.contains('hidden');
+        mobileMenu.classList.toggle('hidden');
+        hamburgerBtn.querySelector('i').className = isOpen ? 'fas fa-bars' : 'fas fa-times';
+    });
+
+    // Tutup menu kalau klik link
+    mobileMenu.querySelectorAll('.mobile-link').forEach(link => {
+        link.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+            hamburgerBtn.querySelector('i').className = 'fas fa-bars';
+        });
+    });
+
+    // Tutup menu kalau klik di luar
+    document.addEventListener('click', (e) => {
+        if (!mobileMenu.contains(e.target) && e.target !== hamburgerBtn) {
+            mobileMenu.classList.add('hidden');
+            hamburgerBtn.querySelector('i').className = 'fas fa-bars';
+        }
     });
 }

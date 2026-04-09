@@ -523,6 +523,18 @@ header.scrolled {
     transition: filter 0.3s;
 }
 
+.card video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+}
+
+.card:hover video {
+    filter: brightness(1.1);
+}
+
 .card:hover {
     transform: scale(1.2);
     box-shadow: 0 10px 20px rgba(0,0,0,0.8);
@@ -556,114 +568,302 @@ header.scrolled {
 .left-arrow { left: -4%; }
 .right-arrow { right: -4%; }
 
-/* Special Features (3D) */
-.special-feature-wrapper {
-    display: flex;
-    gap: 2rem;
-    background: #181818;
-    padding: 2rem;
-    border-radius: 8px;
-    align-items: center;
-    border: 1px solid #333;
-}
-
-.feature-info {
-    flex: 1;
-}
-
-.feature-info h3 {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-}
-
-.feature-info p {
-    color: var(--text-muted);
-    line-height: 1.6;
-    font-size: 1rem;
-}
-
-.feature-interactive {
-    flex: 1;
-    height: 300px;
-    border-radius: 8px;
+/* ✨ FILTER SECTION STYLES - ENHANCED ✨ */
+.filter-section {
+    background: linear-gradient(135deg, #0d0d1a 0%, #1a0a0f 50%, #0d1a1a 100%);
+    border-radius: 20px;
+    margin: 2rem 4%;
+    padding: 2.5rem 2rem;
+    border: 1px solid rgba(229,9,20,0.25);
+    position: relative;
     overflow: hidden;
-    cursor: grab;
-    background: radial-gradient(circle, #2a2a2a 0%, #111 100%);
 }
 
-.feature-interactive:active {
-    cursor: grabbing;
+/* Decorative background glow */
+.filter-section::before {
+    content: '';
+    position: absolute;
+    top: -80px;
+    right: -80px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(229,9,20,0.12) 0%, transparent 70%);
+    pointer-events: none;
+    border-radius: 50%;
+}
+.filter-section::after {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    left: -60px;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(100,180,255,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    border-radius: 50%;
 }
 
-/* Playlist Section */
-.playlist-section {
-    background: linear-gradient(to top, rgba(229,9,20,0.1), transparent);
-}
-
-.playlist-desc {
+.filter-desc {
     color: var(--text-muted);
-    margin-bottom: 1.5rem;
-    font-size: 1.2rem;
+    margin-bottom: 1.8rem;
+    font-size: 1rem;
+    text-align: center;
+    letter-spacing: 0.03em;
 }
 
-.mood-buttons {
+.filter-buttons {
     display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
+    gap: 0.7rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 2.2rem;
 }
 
-.mood-btn {
-    background: transparent;
-    border: 2px solid var(--text-muted);
-    color: var(--text-main);
-    padding: 0.8rem 2rem;
-    border-radius: 50px;
-    font-weight: 700;
+.filter-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1.5px solid rgba(255,255,255,0.12);
+    color: var(--text-muted);
+    padding: 0.55rem 1.3rem;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 0.88rem;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.25s ease;
+    backdrop-filter: blur(6px);
+    letter-spacing: 0.02em;
 }
 
-.mood-btn:hover, .mood-btn.active {
-    border-color: var(--text-main);
-    background: var(--text-main);
-    color: var(--bg-color);
+.filter-btn:hover {
+    border-color: rgba(229,9,20,0.5);
+    color: var(--text-main);
+    background: rgba(229,9,20,0.08);
+    transform: translateY(-1px);
 }
 
-.playlist-result {
-    background: #181818;
-    padding: 2rem;
-    border-radius: 8px;
-    border: 1px solid #333;
+.filter-btn.active {
+    background: var(--primary-red);
+    border-color: var(--primary-red);
+    color: white;
+    box-shadow: 0 0 18px rgba(229,9,20,0.45), 0 2px 8px rgba(0,0,0,0.4);
+    transform: translateY(-1px);
 }
 
-.playlist-result.hidden {
-    display: none;
+/* Main preview layout */
+.filter-preview-area {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1.8rem;
+    align-items: start;
 }
 
-#playlist-title {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: var(--primary-red);
+/* Image container with cinematic frame */
+.filter-image-container {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.06);
+    background: #000;
+    aspect-ratio: 16/9;
 }
 
-#playlist-list {
-    list-style: none;
+.filter-image-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 40%);
+    z-index: 2;
+    pointer-events: none;
 }
 
-#playlist-list li {
-    padding: 0.8rem 0;
-    border-bottom: 1px solid #333;
+.filter-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: filter 0.35s ease, transform 0.4s ease;
+}
+
+.filter-image-container:hover img {
+    transform: scale(1.02);
+}
+
+/* Side panel */
+.filter-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    background: rgba(255,255,255,0.03);
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.07);
+    backdrop-filter: blur(10px);
+    position: relative;
+}
+
+/* Filter name badge */
+.filter-info p {
+    font-size: 0.95rem;
+    color: #ccc;
+    font-weight: 500;
+    line-height: 1.5;
+    background: rgba(229,9,20,0.08);
+    border: 1px solid rgba(229,9,20,0.2);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    text-align: left;
+}
+
+/* Filter preview thumbnails strip */
+.filter-swatches {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.filter-swatch {
+    aspect-ratio: 1;
+    overflow: hidden;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.filter-swatch img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+.filter-swatch.active {
+    border-color: var(--primary-red);
+    box-shadow: 0 0 10px rgba(229,9,20,0.5);
+}
+
+.filter-swatch:hover {
+    border-color: rgba(255,255,255,0.3);
+    transform: scale(1.05);
+}
+
+.btn-download {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: white;
+    border: none;
+    padding: 0.85rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.25s ease;
     display: flex;
     align-items: center;
-    gap: 15px;
-    color: var(--text-muted);
-    font-size: 1.1rem;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(46,204,113,0.25);
+    letter-spacing: 0.02em;
 }
 
-#playlist-list li:before {
-    content: '▶';
-    font-size: 0.8rem;
-    color: var(--text-main);
+.btn-download:hover {
+    background: linear-gradient(135deg, #27ae60, #219a52);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(46,204,113,0.35);
+}
+
+.btn-download:active {
+    transform: translateY(0);
+}
+
+.filter-gallery-hint {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.82rem;
+    color: #666;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding-top: 1.2rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* ============================================
+   RESPONSIVE — MOBILE STYLES
+   ============================================ */
+
+@media (max-width: 900px) {
+    /* Filter section */
+    .filter-preview-area {
+        grid-template-columns: 1fr;
+    }
+    .filter-info {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    .filter-info p { flex: 1 1 100%; margin-bottom: 0; }
+    .btn-download { flex: 1; }
+    .filter-section { margin: 1rem 3%; padding: 1.5rem 1rem; }
+}
+
+@media (max-width: 768px) {
+    /* Navbar */
+    .nav-links { display: none; }
+    .logo { font-size: 1.6rem; }
+
+    /* Hero */
+    .movie-title { font-size: 2.6rem; line-height: 1.1; }
+    .hero-desc { font-size: 0.95rem; max-width: 100%; }
+    .hero-buttons { flex-direction: column; gap: 0.7rem; }
+    .hero-buttons .btn { width: 100%; justify-content: center; font-size: 1rem; padding: 0.75rem 1.5rem; }
+    .hero-container { padding: 0 5%; align-items: flex-end; padding-bottom: 100px; }
+    .hero-vignette-left { width: 100%; }
+    .hero-dots { bottom: 75px; right: 16px; }
+    .hero-arrow { display: flex; opacity: 0.7; width: 36px; height: 36px; font-size: 18px; }
+
+    /* Rows */
+    .row-container { padding: 1.5rem 4%; }
+    .row-title { font-size: 1.15rem; }
+    .slider { gap: 5px; }
+    .card { flex: 0 0 160px; height: 90px; }
+    .slider-arrow { display: none; }
+
+    /* Galeri */
+    .galeri-section { padding: 1rem 1rem; }
+    .galeri-title { font-size: 1.1rem; }
+    .grid-card { flex: 0 0 200px; width: 200px; height: 112px; }
+    .row-btn { display: none; }
+
+    /* Wishes */
+    .wishes-wrapper { flex-direction: column; }
+    .wish-form-container { flex: none; width: 100%; }
+    .wish-board { min-height: 300px; }
+
+    /* Modal */
+    .netflix-modal { width: 96%; }
+    .modal-title { font-size: 1.5rem; }
+    .modal-details { padding: 1.2rem 1.5rem; }
+    .modal-meta { flex-wrap: wrap; gap: 8px; font-size: 0.85rem; }
+    .modal-text { font-size: 1rem; }
+
+    /* Filter */
+    .filter-btn { padding: 0.45rem 0.9rem; font-size: 0.8rem; }
+    .filter-section { margin: 1rem 2%; padding: 1.2rem 0.8rem; border-radius: 14px; }
+    .filter-image-container { border-radius: 10px; }
+
+    /* Footer */
+    footer { font-size: 0.8rem; padding: 1.5rem 1rem; }
+}
+
+@media (max-width: 480px) {
+    .movie-title { font-size: 2rem; }
+    .n-series { gap: 6px; }
+    .top-10 { font-size: 1rem; }
+    .galeri-title { font-size: 1rem; }
+    .grid-card { flex: 0 0 160px; width: 160px; height: 90px; }
+    .filter-buttons { gap: 0.5rem; }
+    .filter-btn { padding: 0.4rem 0.75rem; font-size: 0.78rem; }
 }
 
 /* Wishes Section */
@@ -995,4 +1195,58 @@ footer {
 @media (max-width: 900px) {
     .grid-card { flex: 0 0 240px; width: 240px; height: 135px; }
     .row-btn { width: 32px; }
+}
+
+/* ========== HAMBURGER & MOBILE MENU ========== */
+.hamburger-btn {
+    display: none;
+    font-size: 1.3rem;
+}
+
+.mobile-menu {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    width: 100%;
+    background: rgba(10, 10, 10, 0.97);
+    backdrop-filter: blur(12px);
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(229,9,20,0.25);
+    animation: slideDown 0.25s ease;
+}
+
+.mobile-menu.hidden {
+    display: none !important;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.mobile-link {
+    color: var(--text-main);
+    text-decoration: none;
+    padding: 0.9rem 1.8rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: background 0.2s, color 0.2s;
+    display: block;
+}
+
+.mobile-link:last-child {
+    border-bottom: none;
+}
+
+.mobile-link:hover, .mobile-link:active {
+    background: rgba(229,9,20,0.1);
+    color: var(--primary-red);
+}
+
+@media (max-width: 768px) {
+    .hamburger-btn { display: flex; }
 }

@@ -32,12 +32,23 @@
                 <nav class="nav-links">
                     <a href="#hero">Beranda</a>
                     <a href="#trending">Kenangan</a>
-                    <a href="#features">Fitur Spesial</a>
+                    <a href="#photo-filter">Photo Filter</a>
                     <a href="#wishes">Pesan Digital</a>
                 </nav>
             </div>
             <div class="nav-right">
                 <button id="music-toggle" class="nav-btn"><i class="fas fa-volume-mute"></i></button>
+                <button id="hamburger" class="nav-btn hamburger-btn" aria-label="Menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <!-- Mobile Menu Drawer -->
+            <div id="mobile-menu" class="mobile-menu hidden">
+                <a href="#hero" class="mobile-link">Beranda</a>
+                <a href="#trending" class="mobile-link">Kenangan</a>
+                <a href="#photo-filter" class="mobile-link">Photo Filter</a>
+                <a href="#wishes" class="mobile-link">Pesan Digital</a>
             </div>
         </header>
 
@@ -47,7 +58,7 @@
 
                 <!-- ===== HERO SLIDER BACKGROUNDS ===== -->
                 <div class="hero-slider" id="heroSlider">
-                    <div class="hero-slide active" style="background-image: url('images/tin1.jpg');"></div>
+                    <div class="hero-slide active" style="background-image: url('images/sumbing.png');"></div>
                     <div class="hero-slide" style="background-image: url('images/tin14.jpg');"></div>
                     <div class="hero-slide" style="background-image: url('images/tin21.jpg');"></div>
                     <div class="hero-slide" style="background-image: url('images/tin19.jpg');"></div>
@@ -225,16 +236,6 @@
                                 <div class="grid-card"><img src="images/tin38.jpg" alt="kenangan 38" loading="lazy"></div>
                                 <div class="grid-card"><img src="images/tin39.jpg" alt="kenangan 39" loading="lazy"></div>
                                 <div class="grid-card"><img src="images/tin40.jpg" alt="kenangan 40" loading="lazy"></div>
-                                <div class="grid-card"><img src="images/tin41.jpg" alt="kenangan 41" loading="lazy"></div>
-                                <div class="grid-card"><img src="images/tin42.jpg" alt="kenangan 42" loading="lazy"></div>
-                                <div class="grid-card"><img src="images/tin43.jpg" alt="kenangan 43" loading="lazy"></div>
-                                <div class="grid-card"><img src="images/tin44.jpg" alt="kenangan 44" loading="lazy"></div>
-                                <div class="grid-card"><img src="images/tin45.jpg" alt="kenangan 45" loading="lazy"></div>
-                                <div class="grid-card"><img src="images/tin46.jpg" alt="kenangan 46" loading="lazy"></div>
-                                <div class="grid-card"><img src="images/tin47.jpg" alt="kenangan 47" loading="lazy"></div>
-                                <div class="grid-card"><img src="images/tin48.jpg" alt="kenangan 48" loading="lazy"></div>
-                                <div class="grid-card"><img src="images/tin49.jpg" alt="kenangan 49" loading="lazy"></div>
-                                <div class="grid-card"><img src="images/tin50.jpg" alt="kenangan 50" loading="lazy"></div>
                             </div>
                         </div>
                         <button class="row-btn btn-right" onclick="scrollHorizontal('row4', 1)"><i class="fas fa-chevron-right"></i></button>
@@ -243,18 +244,50 @@
                 </div>
             </section>
 
-            <!-- Playlist Generator Row -->
-            <section id="playlist" class="row-container playlist-section reveal">
-                <h2 class="row-title">DJ CANTIKAFLIX 🎧</h2>
-                <p class="playlist-desc">Pilih mood kamu hari ini untuk mendapatkan rekomendasi soundtrack terbaik:</p>
-                <div class="mood-buttons">
-                    <button class="mood-btn" data-mood="happy">Happy 😊</button>
-                    <button class="mood-btn" data-mood="chill">Chill 🌸</button>
-                    <button class="mood-btn" data-mood="energetic">Energetic 💃</button>
+            <!-- ✨ NEW: Photo Filter Booth - Gantikan DJ Section ✨ -->
+            <section id="photo-filter" class="row-container filter-section reveal">
+                <h2 class="row-title">✨ FILTER KENANGAN ✨</h2>
+                <p class="filter-desc">Pilih efek filter untuk foto kenangan Astin ⭐</p>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="original">🌈 Original</button>
+                    <button class="filter-btn" data-filter="vintage">📻 Vintage</button>
+                    <button class="filter-btn" data-filter="warm">🔥 Warm</button>
+                    <button class="filter-btn" data-filter="cool">❄️ Cool</button>
+                    <button class="filter-btn" data-filter="dramatic">🎬 Dramatic</button>
                 </div>
-                <div id="playlist-result" class="playlist-result hidden">
-                    <h3 id="playlist-title"></h3>
-                    <ul id="playlist-list"></ul>
+                <div class="filter-preview-area">
+                    <div class="filter-image-container" id="filterImageContainer">
+                        <img id="previewImage" src="images/tin14.jpg" alt="Preview">
+                    </div>
+                    <div class="filter-info">
+                        <p id="filterEffectDesc">✨ Tanpa filter — kenangan asli apa adanya</p>
+
+                        <!-- Thumbnail swatch images -->
+                        <div class="filter-swatches" id="filterSwatches">
+                            <div class="filter-swatch active" data-src="images/tin14.jpg">
+                                <img src="images/tin14.jpg" alt="foto 1">
+                            </div>
+                            <div class="filter-swatch" data-src="images/tin18.jpg">
+                                <img src="images/tin18.jpg" alt="foto 2">
+                            </div>
+                            <div class="filter-swatch" data-src="images/tin19.jpg">
+                                <img src="images/tin19.jpg" alt="foto 3">
+                            </div>
+                            <div class="filter-swatch" data-src="images/tin21.jpg">
+                                <img src="images/tin21.jpg" alt="foto 4">
+                            </div>
+                            <div class="filter-swatch" data-src="images/tin1.jpg">
+                                <img src="images/tin1.jpg" alt="foto 5">
+                            </div>
+                        </div>
+
+                        <button id="downloadFilterBtn" class="btn btn-download">
+                            📸 Simpan Foto
+                        </button>
+                    </div>
+                </div>
+                <div class="filter-gallery-hint">
+                    <i class="fa-regular fa-image"></i> Geser galeri di atas untuk mencoba filter ke foto lain!
                 </div>
             </section>
 
@@ -280,6 +313,6 @@
         </footer>
     </div>
 
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
