@@ -220,6 +220,45 @@ function playHappyBirthday() {
     if (!audioContext) audioContext = initAudioContext();
     if (audioContext.state === 'suspended') audioContext.resume();
     
+    // 🔥 GANTI DENGAN FILE AUDIO KAMU SENDIRI 🔥
+    // Ganti 'images/birthday.mp3' dengan nama file audio kamu
+    fetch('images/birthday.mp3')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('File audio tidak ditemukan: ' + response.status);
+            }
+            return response.arrayBuffer();
+        })
+        .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+        .then(audioBuffer => {
+            // Putar audio
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            
+            if (currentGainNode) currentGainNode.disconnect();
+            currentGainNode = audioContext.createGain();
+            currentGainNode.gain.value = 0.7; // Volume 70%
+            currentGainNode.connect(audioContext.destination);
+            
+            source.connect(currentGainNode);
+            source.start();
+            
+            // Loop audio ketika selesai
+            source.onended = () => {
+                if (isPlaying) {
+                    playHappyBirthday();
+                }
+            };
+        })
+        .catch(error => {
+            console.error('Gagal memuat audio:', error);
+            // Fallback ke nada synth jika file tidak ditemukan
+            playSynthFallback();
+        });
+}
+
+// Fallback jika file audio tidak ditemukan (nada synth)
+function playSynthFallback() {
     const notes = [
         { freq: 392, duration: 0.4 }, { freq: 392, duration: 0.4 },
         { freq: 440, duration: 0.8 }, { freq: 392, duration: 0.8 },
@@ -260,10 +299,6 @@ function playHappyBirthday() {
         osc.stop(now + time + note.duration);
         time += note.duration;
     });
-    
-    setTimeout(() => {
-        if (isPlaying) playHappyBirthday();
-    }, time * 1000 + 500);
 }
 
 function toggleMusic() {
