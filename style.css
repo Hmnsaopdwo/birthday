@@ -98,6 +98,52 @@ body {
     transition: border-color 0.3s;
 }
 
+/* PIN Box Style - Kotak terpisah */
+.pin-container {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.pin-box {
+    width: 55px;
+    height: 65px;
+    background: #1a1a1a;
+    border: 2px solid #333;
+    border-radius: 8px;
+    color: var(--text-main);
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.pin-box:focus {
+    border-color: var(--primary-red);
+    box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.3);
+    transform: scale(1.02);
+}
+
+.pin-box.error {
+    border-color: var(--primary-red);
+    animation: shake 0.3s ease-in-out;
+}
+
+/* Responsive untuk HP */
+@media (max-width: 480px) {
+    .pin-box {
+        width: 45px;
+        height: 55px;
+        font-size: 1.5rem;
+    }
+    .pin-container {
+        gap: 8px;
+    }
+}
+
 #pin-input:focus {
     border-color: var(--primary-red);
     background: #444;
@@ -1042,19 +1088,22 @@ header.scrolled {
     transform: scale(1.1);
 }
 
+/* Modal Video Placeholder - FIX untuk Google Drive */
 .modal-video-placeholder {
+    position: relative;
+    width: 100%;
     background: #000;
-    line-height: 0;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
 }
 
-.modal-video-placeholder::after {
-    content: '';
+.modal-video-placeholder iframe {
     position: absolute;
-    bottom: 0;
+    top: 0;
     left: 0;
     width: 100%;
-    height: 50%;
-    background: linear-gradient(to top, #181818, transparent);
+    height: 100%;
+    border: none;
 }
 
 .play-icon-large {

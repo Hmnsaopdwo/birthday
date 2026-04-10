@@ -5,45 +5,164 @@ let audioContext = null;
 let isWebAudioPlaying = false;
 let currentGainNode = null;
 
-// --- PASSWORD GATE LOGIC ---
+// --- PASSWORD GATE LOGIC (PIN Box Style) ---
 const passwordGate = document.getElementById('password-gate');
 const mainContent = document.getElementById('main-content');
-const lockForm = document.getElementById('lock-form');
-const pinInput = document.getElementById('pin-input');
 const hintToggle = document.getElementById('hint-toggle');
 const hintPopup = document.getElementById('hint-popup');
+
+// Ambil semua kotak PIN
+const pinBoxes = [document.getElementById('pin-1'), document.getElementById('pin-2'), document.getElementById('pin-3'), document.getElementById('pin-4'), document.getElementById('pin-5'), document.getElementById('pin-6')];
+
+const correctPin = '170222';
 
 hintToggle.addEventListener('click', () => {
     hintPopup.classList.toggle('hidden');
 });
 
-pinInput.addEventListener('input', () => {
-    pinInput.classList.remove('error', 'shake');
-});
+// Fungsi untuk mendapatkan nilai PIN dari semua kotak
+function getPinValue() {
+    let pin = '';
+    pinBoxes.forEach(box => {
+        pin += box.value;
+    });
+    return pin;
+}
 
-lockForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const pin = pinInput.value;
-    
-    if (pin === '170222') {
-        isUnlocked = true;
-        passwordGate.classList.add('fade-out');
+// Fungsi untuk clear semua kotak
+function clearPinBoxes() {
+    pinBoxes.forEach(box => {
+        box.value = '';
+    });
+    pinBoxes[0].focus();
+}
+
+// Fungsi untuk menghapus class error dari semua kotak
+function removeErrorClass() {
+    pinBoxes.forEach(box => {
+        box.classList.remove('error');
+    });
+}
+
+// Auto focus ke kotak berikutnya saat diisi
+pinBoxes.forEach((box, index) => {
+    box.addEventListener('input', (e) => {
+        // Hanya angka yang diperbolehkan
+        box.value = box.value.replace(/[^0-9]/g, '');
         
-        setTimeout(() => {
-            passwordGate.classList.add('hidden');
-            mainContent.classList.remove('hidden');
-            handleScrollReveal();
-            showMusicNotification();
-            initHeroSlider(); // ← start slider after unlock
-        }, 500);
-    } else {
-        pinInput.classList.remove('shake');
-        void pinInput.offsetWidth;
-        pinInput.classList.add('error', 'shake');
-        pinInput.value = '';
-    }
+        if (box.value.length === 1 && index < 5) {
+            pinBoxes[index + 1].focus();
+        }
+        
+        removeErrorClass();
+    });
+    
+    // Handle backspace untuk pindah ke kotak sebelumnya
+    box.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && box.value === '' && index > 0) {
+            pinBoxes[index - 1].focus();
+        }
+    });
+    
+    // Hapus error saat mulai mengetik
+    box.addEventListener('focus', () => {
+        removeErrorClass();
+    });
 });
 
+// Submit PIN ketika semua kotak terisi
+// Submit PIN ketika semua kotak terisi - VERSION 2 (SEDERHANA)
+function checkPinAndSubmit() {
+    const pin = getPinValue();
+    if (pin.length === 6) {
+        if (pin === correctPin) {
+            // PIN benar
+            isUnlocked = true;
+            passwordGate.classList.add('fade-out');
+            
+            setTimeout(() => {
+                passwordGate.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+                handleScrollReveal();
+                showMusicNotification();
+                initHeroSlider();
+                
+                setTimeout(() => {
+                    if (!isPlaying) {
+                        toggleMusic();
+                        console.log('🎵 Happy Birthday otomatis diputar!');
+                    }
+                }, 800);
+            }, 500);
+        } else {
+            // PIN salah
+            pinBoxes.forEach(b => b.classList.add('error'));
+            setTimeout(() => {
+                clearPinBoxes();
+                pinBoxes.forEach(b => b.classList.remove('error'));
+            }, 300);
+            
+            // Efek shake
+            const container = document.querySelector('.pin-container');
+            if (container) {
+                container.style.animation = 'shake 0.3s ease-in-out';
+                setTimeout(() => {
+                    container.style.animation = '';
+                }, 300);
+            }
+        }
+    }
+}
+
+// Hapus semua event listener lama dengan clone & replace
+pinBoxes.forEach((box, index) => {
+    const newBox = box.cloneNode(true);
+    box.parentNode.replaceChild(newBox, box);
+    pinBoxes[index] = newBox;
+});
+
+// Refresh pinBoxes array
+const freshPinBoxes = [
+    document.getElementById('pin-1'),
+    document.getElementById('pin-2'),
+    document.getElementById('pin-3'),
+    document.getElementById('pin-4'),
+    document.getElementById('pin-5'),
+    document.getElementById('pin-6')
+];
+
+// Kosongkan array lalu isi ulang
+pinBoxes.length = 0;
+freshPinBoxes.forEach(b => pinBoxes.push(b));
+
+// Tambah event listener baru
+pinBoxes.forEach((box, index) => {
+    box.addEventListener('input', (e) => {
+        // Hanya angka
+        box.value = box.value.replace(/[^0-9]/g, '');
+        
+        // Auto pindah ke kotak berikutnya
+        if (box.value.length === 1 && index < 5) {
+            pinBoxes[index + 1].focus();
+        }
+        
+        // Cek PIN
+        checkPinAndSubmit();
+    });
+    
+    box.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && box.value === '' && index > 0) {
+            pinBoxes[index - 1].focus();
+        }
+    });
+    
+    box.addEventListener('focus', () => {
+        box.select();
+    });
+});
+
+// Fokus ke kotak pertama
+if (pinBoxes[0]) pinBoxes[0].focus();
 // --- MUSIC NOTIFICATION ---
 function showMusicNotification() {
     const notification = document.createElement('div');
@@ -122,7 +241,7 @@ function playHappyBirthday() {
     
     if (currentGainNode) currentGainNode.disconnect();
     currentGainNode = audioContext.createGain();
-    currentGainNode.gain.value = 0.3;
+    currentGainNode.gain.value = 0.7;
     currentGainNode.connect(audioContext.destination);
     
     notes.forEach((note, index) => {
@@ -157,7 +276,7 @@ function toggleMusic() {
         isPlaying = false;
     } else {
         if (audioContext.state === 'suspended') audioContext.resume();
-        if (currentGainNode) currentGainNode.gain.value = 0.3;
+        if (currentGainNode) currentGainNode.gain.value = 0.7;
         playHappyBirthday();
         musicIcon.classList.remove('fa-volume-mute');
         musicIcon.classList.add('fa-volume-up');
@@ -165,13 +284,26 @@ function toggleMusic() {
     }
 }
 
-musicToggleBtn.addEventListener('click', toggleMusic);
+// Musik langsung menyala setelah unlock (tanpa perlu klik)
+function startMusicAutomatically() {
+    if (isUnlocked && !isPlaying) {
+        setTimeout(() => {
+            toggleMusic();
+            console.log('🎵 Musik otomatis diputar');
+        }, 500);
+    }
+}
 
+// Panggil fungsi ini setelah unlock
+// Dan juga untuk pertama kali setelah halaman siap
 document.addEventListener('click', function initAudioOnFirstClick() {
     if (isUnlocked && !isPlaying) {
-        setTimeout(() => toggleMusic(), 500);
+        startMusicAutomatically();
     }
 }, { once: true });
+
+// Untuk memastikan musik jalan setelah unlock tanpa perlu klik
+// Override: setelah PIN benar, langsung putar musik
 
 const contentObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
@@ -411,128 +543,89 @@ function init3D() {
 }
 setTimeout(init3D, 2000);
 
-// --- VIDEO MODAL WITH MUSIC CONTROL & FULLSCREEN ---
+// --- VIDEO MODAL WITH MUSIC CONTROL (Google Drive Version - FIXED) ---
 const openBtn = document.getElementById('open-envelope-btn');
 const modal = document.getElementById('message-modal');
 const closeBtn = document.querySelector('.close-btn');
-const pesanVideo = document.getElementById('pesan-video');
-let wasMusicPlaying = false; // Untuk menyimpan status musik sebelumnya
+const modalVideoPlaceholder = document.querySelector('.modal-video-placeholder');
+let wasMusicPlaying = false;
+let currentIframe = null;
 
-if (openBtn && modal && closeBtn && pesanVideo) {
+// Fungsi untuk membuat iframe baru
+function createIframe() {
+    const iframe = document.createElement('iframe');
+    iframe.id = 'pesan-video';
+    iframe.src = 'https://drive.google.com/file/d/1ZyNFlFvdfks26XgzKD8S4zfHsrrsSdo4/preview';
+    iframe.width = '100%';
+    iframe.height = '100%';
+    iframe.allow = 'autoplay; fullscreen';
+    iframe.allowfullscreen = true;
+    iframe.frameborder = '0';
+    return iframe;
+}
 
-    // Function untuk masuk fullscreen
-    function enterFullscreen(element) {
-        if (element.requestFullscreen) {
-            element.requestFullscreen();
-        } else if (element.webkitRequestFullscreen) { /* Safari */
-            element.webkitRequestFullscreen();
-        } else if (element.msRequestFullscreen) { /* IE/Edge */
-            element.msRequestFullscreen();
-        }
+// Fungsi untuk memuat iframe
+function loadIframe() {
+    if (currentIframe) {
+        currentIframe.remove();
     }
+    currentIframe = createIframe();
+    modalVideoPlaceholder.appendChild(currentIframe);
+}
 
-    // Function untuk keluar fullscreen
-    function exitFullscreen() {
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) { /* Safari */
-            document.webkitExitFullscreen();
-        } else if (document.msExitFullscreen) { /* IE/Edge */
-            document.msExitFullscreen();
-        }
+// Fungsi untuk menghapus iframe (menghentikan video)
+function unloadIframe() {
+    if (currentIframe) {
+        currentIframe.remove();
+        currentIframe = null;
     }
+}
 
-    openBtn.addEventListener('click', () => {
-        // 1. Matikan musik jika sedang diputar
-        if (isPlaying) {
-            wasMusicPlaying = true;
-            toggleMusic(); // Matikan musik
-        } else {
-            wasMusicPlaying = false;
-        }
-        
-        // 2. Tampilkan modal
-        modal.classList.remove('hidden');
-        
-        // 3. Play video dan masuk fullscreen
-        pesanVideo.play().then(() => {
-            // Masuk fullscreen pada container video atau modal
-            const videoContainer = document.querySelector('.modal-video-placeholder');
-            enterFullscreen(videoContainer || pesanVideo);
-        }).catch(err => {
-            console.log('Video autoplay failed:', err);
-        });
-    });
+openBtn.addEventListener('click', () => {
+    // 1. Matikan musik jika sedang diputar
+    if (isPlaying) {
+        wasMusicPlaying = true;
+        toggleMusic();
+    } else {
+        wasMusicPlaying = false;
+    }
+    
+    // 2. Muat iframe baru
+    loadIframe();
+    
+    // 3. Tampilkan modal
+    modal.classList.remove('hidden');
+    
+    console.log('Modal opened, video loaded');
+});
 
-    // Saat video selesai diputar
-    pesanVideo.addEventListener('ended', () => {
-        // 1. Keluar dari fullscreen
-        exitFullscreen();
-        
-        // 2. Tutup modal
-        modal.classList.add('hidden');
-        
-        // 3. Nyalakan musik kembali jika sebelumnya menyala
-        if (wasMusicPlaying && !isPlaying) {
-            toggleMusic(); // Nyalakan musik lagi
-        }
-        
-        // 4. Reset video ke awal
-        pesanVideo.currentTime = 0;
-    });
+// Fungsi untuk membersihkan modal dan mengembalikan musik
+function closeModalAndResumeMusic() {
+    // 1. Hapus iframe (menghentikan video)
+    unloadIframe();
+    
+    // 2. Tutup modal
+    modal.classList.add('hidden');
+    
+    // 3. Nyalakan musik kembali jika sebelumnya menyala
+    if (wasMusicPlaying && !isPlaying) {
+        toggleMusic();
+    }
+}
 
-    // Close button manual
+// Close button manual
+if (closeBtn) {
     closeBtn.addEventListener('click', () => {
-        // Keluar fullscreen jika sedang fullscreen
-        if (document.fullscreenElement || document.webkitFullscreenElement) {
-            exitFullscreen();
-        }
-        
-        // Hentikan video
-        pesanVideo.pause();
-        pesanVideo.currentTime = 0;
-        
-        // Tutup modal
-        modal.classList.add('hidden');
-        
-        // Nyalakan musik kembali jika sebelumnya menyala
-        if (wasMusicPlaying && !isPlaying) {
-            toggleMusic();
-        }
-    });
-
-    // Klik di luar modal
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            // Keluar fullscreen jika sedang fullscreen
-            if (document.fullscreenElement || document.webkitFullscreenElement) {
-                exitFullscreen();
-            }
-            
-            pesanVideo.pause();
-            pesanVideo.currentTime = 0;
-            modal.classList.add('hidden');
-            
-            if (wasMusicPlaying && !isPlaying) {
-                toggleMusic();
-            }
-        }
-    });
-
-    // Listen untuk esc key keluar fullscreen
-    document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-            // Jika keluar fullscreen tapi video masih diputar dan modal terbuka
-            if (!modal.classList.contains('hidden') && !pesanVideo.paused) {
-                pesanVideo.pause();
-                modal.classList.add('hidden');
-                if (wasMusicPlaying && !isPlaying) {
-                    toggleMusic();
-                }
-            }
-        }
+        closeModalAndResumeMusic();
     });
 }
+
+// Klik di luar modal
+modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+        closeModalAndResumeMusic();
+    }
+});
 
 // --- BIRTHDAY WISH CANVAS (Firebase Realtime) ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";

@@ -15,7 +15,14 @@
         <div class="lock-container">
             <h1 class="logo">NDUTFLIX</h1>
             <form id="lock-form">
-                <input type="password" id="pin-input" placeholder="Masukkan kode rahasia" pattern="\d*" maxlength="6" autocomplete="off" required inputmode="numeric">
+                <div class="pin-container">
+                    <input type="password" id="pin-1" class="pin-box" maxlength="1" inputmode="numeric" autofocus>
+                    <input type="password" id="pin-2" class="pin-box" maxlength="1" inputmode="numeric">
+                    <input type="password" id="pin-3" class="pin-box" maxlength="1" inputmode="numeric">
+                    <input type="password" id="pin-4" class="pin-box" maxlength="1" inputmode="numeric">
+                    <input type="password" id="pin-5" class="pin-box" maxlength="1" inputmode="numeric">
+                    <input type="password" id="pin-6" class="pin-box" maxlength="1" inputmode="numeric">
+                </div>
                 <button type="submit" class="btn btn-unlock">Unlock</button>
             </form>
             <p id="hint-toggle">Lupa kode? Klik untuk hint</p>
@@ -111,10 +118,6 @@
                 <div class="modal-content netflix-modal">
                     <span class="close-btn">&times;</span>
                     <div class="modal-video-placeholder">
-                        <video id="pesan-video" width="100%" controls style="display:block;">
-                            <source src="images/ucapan.mp4" type="video/mp4">
-                            Browser kamu tidak mendukung video.
-                        </video>
                     </div>
                     <div class="modal-details">
                         <h2 class="modal-title">Pesan Rahasia 💌</h2>
