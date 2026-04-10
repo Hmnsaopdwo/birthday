@@ -15,7 +15,7 @@
         <div class="lock-container">
             <h1 class="logo">NDUTFLIX</h1>
             <form id="lock-form">
-                <input type="text" id="pin-input" placeholder="Masukkan kode rahasia" pattern="\d*" maxlength="6" autocomplete="off" required>
+                <input type="password" id="pin-input" placeholder="Masukkan kode rahasia" pattern="\d*" maxlength="6" autocomplete="off" required inputmode="numeric">
                 <button type="submit" class="btn btn-unlock">Unlock</button>
             </form>
             <p id="hint-toggle">Lupa kode? Klik untuk hint</p>
@@ -112,7 +112,7 @@
                     <span class="close-btn">&times;</span>
                     <div class="modal-video-placeholder">
                         <video id="pesan-video" width="100%" controls style="display:block;">
-                            <source src="images/ucapan.webm" type="video/mp4">
+                            <source src="images/ucapan.mp4" type="video/mp4">
                             Browser kamu tidak mendukung video.
                         </video>
                     </div>
@@ -282,7 +282,7 @@
                         </div>
 
                         <button id="downloadFilterBtn" class="btn btn-download">
-                            📸 Simpan Foto
+                            <i class="fas fa-download"></i>Simpan Foto
                         </button>
                     </div>
                 </div>

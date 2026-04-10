@@ -411,28 +411,125 @@ function init3D() {
 }
 setTimeout(init3D, 2000);
 
-// --- MESSAGE MODAL ---
+// --- VIDEO MODAL WITH MUSIC CONTROL & FULLSCREEN ---
 const openBtn = document.getElementById('open-envelope-btn');
 const modal = document.getElementById('message-modal');
 const closeBtn = document.querySelector('.close-btn');
+const pesanVideo = document.getElementById('pesan-video');
+let wasMusicPlaying = false; // Untuk menyimpan status musik sebelumnya
 
-if (openBtn && modal && closeBtn) {
-    const pesanVideo = document.getElementById('pesan-video');
+if (openBtn && modal && closeBtn && pesanVideo) {
+
+    // Function untuk masuk fullscreen
+    function enterFullscreen(element) {
+        if (element.requestFullscreen) {
+            element.requestFullscreen();
+        } else if (element.webkitRequestFullscreen) { /* Safari */
+            element.webkitRequestFullscreen();
+        } else if (element.msRequestFullscreen) { /* IE/Edge */
+            element.msRequestFullscreen();
+        }
+    }
+
+    // Function untuk keluar fullscreen
+    function exitFullscreen() {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) { /* Safari */
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) { /* IE/Edge */
+            document.msExitFullscreen();
+        }
+    }
 
     openBtn.addEventListener('click', () => {
+        // 1. Matikan musik jika sedang diputar
+        if (isPlaying) {
+            wasMusicPlaying = true;
+            toggleMusic(); // Matikan musik
+        } else {
+            wasMusicPlaying = false;
+        }
+        
+        // 2. Tampilkan modal
         modal.classList.remove('hidden');
-        if (pesanVideo) pesanVideo.play();
+        
+        // 3. Play video dan masuk fullscreen
+        pesanVideo.play().then(() => {
+            // Masuk fullscreen pada container video atau modal
+            const videoContainer = document.querySelector('.modal-video-placeholder');
+            enterFullscreen(videoContainer || pesanVideo);
+        }).catch(err => {
+            console.log('Video autoplay failed:', err);
+        });
     });
 
-    closeBtn.addEventListener('click', () => {
+    // Saat video selesai diputar
+    pesanVideo.addEventListener('ended', () => {
+        // 1. Keluar dari fullscreen
+        exitFullscreen();
+        
+        // 2. Tutup modal
         modal.classList.add('hidden');
-        if (pesanVideo) { pesanVideo.pause(); pesanVideo.currentTime = 0; }
+        
+        // 3. Nyalakan musik kembali jika sebelumnya menyala
+        if (wasMusicPlaying && !isPlaying) {
+            toggleMusic(); // Nyalakan musik lagi
+        }
+        
+        // 4. Reset video ke awal
+        pesanVideo.currentTime = 0;
     });
 
+    // Close button manual
+    closeBtn.addEventListener('click', () => {
+        // Keluar fullscreen jika sedang fullscreen
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+            exitFullscreen();
+        }
+        
+        // Hentikan video
+        pesanVideo.pause();
+        pesanVideo.currentTime = 0;
+        
+        // Tutup modal
+        modal.classList.add('hidden');
+        
+        // Nyalakan musik kembali jika sebelumnya menyala
+        if (wasMusicPlaying && !isPlaying) {
+            toggleMusic();
+        }
+    });
+
+    // Klik di luar modal
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
+            // Keluar fullscreen jika sedang fullscreen
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                exitFullscreen();
+            }
+            
+            pesanVideo.pause();
+            pesanVideo.currentTime = 0;
             modal.classList.add('hidden');
-            if (pesanVideo) { pesanVideo.pause(); pesanVideo.currentTime = 0; }
+            
+            if (wasMusicPlaying && !isPlaying) {
+                toggleMusic();
+            }
+        }
+    });
+
+    // Listen untuk esc key keluar fullscreen
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            // Jika keluar fullscreen tapi video masih diputar dan modal terbuka
+            if (!modal.classList.contains('hidden') && !pesanVideo.paused) {
+                pesanVideo.pause();
+                modal.classList.add('hidden');
+                if (wasMusicPlaying && !isPlaying) {
+                    toggleMusic();
+                }
+            }
         }
     });
 }
